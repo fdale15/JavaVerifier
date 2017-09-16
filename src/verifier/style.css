@@ -1,0 +1,22 @@
+.pane {
+    -fx-background-color: darkred;
+}
+
+.button {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+.button:hover {
+    -fx-background-color: indianred;
+    -fx-text-fill: white;
+}
+
+.button:pressed {
+    -fx-background-color: #ff8888;
+    -fx-text-fill: white;
+}
+
+.label {
+    -fx-text-fill: white;
+}
