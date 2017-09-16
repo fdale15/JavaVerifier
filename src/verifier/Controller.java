@@ -141,7 +141,7 @@ public class Controller {
                 mRunButton.disableProperty().set(true);
 
                 log("Running target " + mTargetComboBox.getSelectionModel().getSelectedItem().toString());
-                mActiveProcess = Runtime.getRuntime().exec("java -cp . " + mTargetComboBox.getSelectionModel().getSelectedItem().toString() + " " + mRuntimeParams.getText(),
+                mActiveProcess = Runtime.getRuntime().exec("java -cp .:*: " + mTargetComboBox.getSelectionModel().getSelectedItem().toString() + " " + mRuntimeParams.getText(),
                                             null,
                                             new File(mSourceDirectoryField.getText()));
 
@@ -241,8 +241,8 @@ public class Controller {
                         packageName = match.group(1);
                     }
                 }
-                if (s.matches("\\s*(public)?\\s*class[\\w\\s]*\\{?") && !foundClass) {
-                    Matcher match = Pattern.compile("\\s*(public)?\\s*class\\s*(\\w*)[\\w\\s]*\\{?").matcher(s);
+                if (s.matches("\\s*(public)?\\s*class[\\w\\s]*\\{?\\s*") && !foundClass) {
+                    Matcher match = Pattern.compile("\\s*(public)?\\s*class\\s*(\\w*)[\\w\\s]*\\{?\\s*").matcher(s);
                     if (match.find()) {
                         className = match.group(2);
                         foundClass = true;
