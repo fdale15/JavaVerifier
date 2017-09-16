@@ -39,6 +39,7 @@ public class Controller {
     @FXML
     private TextField mSourceDirectoryField;
     private List<String> mSourceFiles = new ArrayList<>();
+    private List<String> mDepedencies = new ArrayList<>();
 
     //Executable targets
     @FXML
@@ -88,10 +89,12 @@ public class Controller {
                     return;
                 }
 
+                String dependencies = String.join(":", mDepedencies);
+
                 List<String> command = new ArrayList<>();
                 command.add("javac");
                 command.add("-cp");
-                command.add(".");
+                command.add(".:" + dependencies);
                 command.addAll(mSourceFiles);
 
                 Process process = Runtime.getRuntime().exec(command.toArray(new String[command.size()]),
@@ -140,8 +143,10 @@ public class Controller {
                 mCompileButton.disableProperty().set(true);
                 mRunButton.disableProperty().set(true);
 
+                String dependencies = String.join(":", mDepedencies);
+
                 log("Running target " + mTargetComboBox.getSelectionModel().getSelectedItem().toString());
-                mActiveProcess = Runtime.getRuntime().exec("java -cp .:*: " + mTargetComboBox.getSelectionModel().getSelectedItem().toString() + " " + mRuntimeParams.getText(),
+                mActiveProcess = Runtime.getRuntime().exec("java -cp .:" + dependencies  + " " + mTargetComboBox.getSelectionModel().getSelectedItem().toString() + " " + mRuntimeParams.getText(),
                                             null,
                                             new File(mSourceDirectoryField.getText()));
 
@@ -202,10 +207,16 @@ public class Controller {
             mTargetComboBox.getItems().clear();
 
             try {
-                Iterator<Path> files = Files.find(Paths.get(mSourceDirectoryField.getText()), 999, (p, bfa) -> bfa.isRegularFile() && p.toString().matches(".+\\.java")).iterator();
+                Iterator<Path> files = Files.find(Paths.get(mSourceDirectoryField.getText()), 999, (p, bfa) -> bfa.isRegularFile() && p.toString().matches(".+\\.(java|jar)")).iterator();
                 while (files.hasNext()) {
                     Path path = files.next();
-                    mSourceFiles.add(path.toString());
+
+                    if (path.toString().contains(".jar")) {
+                        mDepedencies.add(path.toString());
+                    }
+                    else {
+                        mSourceFiles.add(path.toString());
+                    }
                     grabExecutableTarget(path.toString());
                 }
             } catch (IOException e) {
@@ -248,7 +259,11 @@ public class Controller {
                         foundClass = true;
                     }
                 }
-                if (s.matches("\\s*public\\s*static\\s*void\\s*main\\s*\\(String\\[\\]\\s*\\w*\\)\\s\\{?")) {
+                if (s.matches("\\s*public\\s*static\\s*void\\s*main\\s*\\(String\\[\\]\\s*\\w*\\)\\s*\\{?\\s*")) {
+                    if (!foundClass) {
+                        log("Cannot determine class name for file: " + path);
+                        log("Does it end with '{' or whitespace?");
+                    }
                     mTargetComboBox.getItems().add(packageName + "." + className);
                     sourceNeedsPopulated = false;
                 }
